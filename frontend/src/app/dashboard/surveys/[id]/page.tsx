@@ -31,6 +31,9 @@ export default function SurveyTakePage() {
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
   const [reward, setReward] = useState(0)
+  const [pasteCount, setPasteCount] = useState(0)
+  const [pastedQuestions, setPastedQuestions] = useState<number[]>([])
+  const [flagged, setFlagged] = useState(false)
   const startTime = useRef(Date.now())
 
   const surveyId = Number(params.id)
@@ -93,14 +96,21 @@ export default function SurveyTakePage() {
     setSubmitting(true)
     try {
       const timeTaken = Math.round((Date.now() - startTime.current) / 1000)
-      const res = await surveyAPI.submit(surveyId, answers, timeTaken)
+      const res = await surveyAPI.submit(surveyId, answers, timeTaken, pasteCount, pastedQuestions)
       setReward(res.data.reward_earned)
       setDone(true)
-      updateUser({
-        wallet_balance: (user?.wallet_balance || 0) + res.data.reward_earned,
-        total_earned: (user?.total_earned || 0) + res.data.reward_earned,
-        surveys_completed: (user?.surveys_completed || 0) + 1,
-      })
+      
+      if (res.data.status === 'flagged') {
+        setFlagged(true)
+        toast.success('Submitted! Undergoing quality review.')
+      } else {
+        setFlagged(false)
+        updateUser({
+          wallet_balance: (user?.wallet_balance || 0) + res.data.reward_earned,
+          total_earned: (user?.total_earned || 0) + res.data.reward_earned,
+          surveys_completed: (user?.surveys_completed || 0) + 1,
+        })
+      }
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Submission failed')
     } finally {
@@ -112,29 +122,62 @@ export default function SurveyTakePage() {
   if (done) return (
     <DashboardLayout>
       <div className="max-w-lg mx-auto text-center py-16">
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 12 }}>
-          <div className="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-10 h-10 text-emerald-400" />
-          </div>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <h1 className="font-display text-3xl font-bold text-[var(--text-primary)] mb-2">Survey Complete!</h1>
-          <p className="text-[var(--text-secondary)] mb-6">Your response has been recorded</p>
-          <div className="glass rounded-2xl p-6 mb-8 border border-emerald-500/20">
-            <div className="text-4xl font-display font-bold text-emerald-400 mb-1">
-              +{formatCurrency(reward)}
-            </div>
-            <p className="text-[var(--text-secondary)] text-sm">credited to your wallet instantly</p>
-          </div>
-          <div className="flex gap-3 justify-center">
-            <button onClick={() => router.push('/dashboard/surveys')} className="glass glass-hover px-6 py-3 rounded-xl text-sm font-medium text-[var(--text-primary)]">
-              More Surveys
-            </button>
-            <button onClick={() => router.push('/dashboard/wallet')} className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold px-6 py-3 rounded-xl text-sm">
-              <Wallet className="w-4 h-4" /> View Wallet
-            </button>
-          </div>
-        </motion.div>
+        {flagged ? (
+          <>
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 12 }}>
+              <div className="w-20 h-20 rounded-full bg-amber-500/20 border-2 border-amber-500 flex items-center justify-center mx-auto mb-6">
+                <AlertCircle className="w-10 h-10 text-amber-400" />
+              </div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <h1 className="font-display text-3xl font-bold text-[var(--text-primary)] mb-2">Submission Under Review</h1>
+              <p className="text-[var(--text-secondary)] mb-6">Your response has been recorded and flagged for quality verification.</p>
+              <div className="glass rounded-2xl p-6 mb-8 border border-amber-500/20 bg-amber-500/5">
+                <div className="text-4xl font-display font-bold text-amber-400 mb-1">
+                  {formatCurrency(reward)}
+                </div>
+                <p className="text-[var(--text-secondary)] text-sm">pending quality check</p>
+                <div className="mt-3 text-xs text-amber-400 bg-amber-500/10 rounded-lg py-2 px-3 border border-amber-500/10">
+                  Our system noticed faster completion speed or patterns that require review. Rewards will be credited once verified.
+                </div>
+              </div>
+              <div className="flex gap-3 justify-center">
+                <button onClick={() => router.push('/dashboard/surveys')} className="glass glass-hover px-6 py-3 rounded-xl text-sm font-medium text-[var(--text-primary)]">
+                  More Surveys
+                </button>
+                <button onClick={() => router.push('/dashboard/wallet')} className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-black font-bold px-6 py-3 rounded-xl text-sm">
+                  <Wallet className="w-4 h-4" /> View Wallet
+                </button>
+              </div>
+            </motion.div>
+          </>
+        ) : (
+          <>
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 12 }}>
+              <div className="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+              </div>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <h1 className="font-display text-3xl font-bold text-[var(--text-primary)] mb-2">Survey Complete!</h1>
+              <p className="text-[var(--text-secondary)] mb-6">Your response has been recorded</p>
+              <div className="glass rounded-2xl p-6 mb-8 border border-emerald-500/20">
+                <div className="text-4xl font-display font-bold text-emerald-400 mb-1">
+                  +{formatCurrency(reward)}
+                </div>
+                <p className="text-[var(--text-secondary)] text-sm">credited to your wallet instantly</p>
+              </div>
+              <div className="flex gap-3 justify-center">
+                <button onClick={() => router.push('/dashboard/surveys')} className="glass glass-hover px-6 py-3 rounded-xl text-sm font-medium text-[var(--text-primary)]">
+                  More Surveys
+                </button>
+                <button onClick={() => router.push('/dashboard/wallet')} className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-black font-bold px-6 py-3 rounded-xl text-sm">
+                  <Wallet className="w-4 h-4" /> View Wallet
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   )
@@ -290,6 +333,12 @@ export default function SurveyTakePage() {
                 <textarea
                   value={getAnswer() || ''}
                   onChange={e => setAnswer(e.target.value)}
+                  onPaste={() => {
+                    setPasteCount(prev => prev + 1)
+                    if (!pastedQuestions.includes(currentQ.id)) {
+                      setPastedQuestions(prev => [...prev, currentQ.id])
+                    }
+                  }}
                   placeholder="Type your answer here..."
                   rows={4}
                   className="w-full bg-[var(--input-bg)] border border-[var(--border)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-zinc-600 focus:outline-none focus:border-emerald-500/50 transition-all resize-none"

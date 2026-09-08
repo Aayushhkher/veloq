@@ -93,6 +93,38 @@ def list_company_surveys(
 @router.get("/company/{survey_id}/analytics")
 def survey_analytics(
     survey_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    from fastapi import HTTPException
+    company = db.query(Company).filter(Company.user_id == current_user.id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    return get_survey_analytics(db, survey_id, company.id)
+
+
+@router.get("/company/{survey_id}/export-csv")
+def export_survey_csv(
+    survey_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    from fastapi import HTTPException, Response
+    from app.services.survey_service import export_survey_responses_csv
+    company = db.query(Company).filter(Company.user_id == current_user.id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    csv_content = export_survey_responses_csv(db, survey_id, company.id)
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=survey_{survey_id}_responses.csv"}
+    )
+
+
+@router.post("/company/response/{response_id}/approve")
+def approve_response(
+    response_id: int,
     current_user: User = Depends(get_current_company_user),
     db: Session = Depends(get_db)
 ):
@@ -100,4 +132,19 @@ def survey_analytics(
     if not company:
         from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Company not found")
-    return get_survey_analytics(db, survey_id, company.id)
+    from app.services.survey_service import approve_survey_response
+    return approve_survey_response(db, response_id, company.id)
+
+
+@router.post("/company/response/{response_id}/reject")
+def reject_response(
+    response_id: int,
+    current_user: User = Depends(get_current_company_user),
+    db: Session = Depends(get_db)
+):
+    company = db.query(Company).filter(Company.user_id == current_user.id).first()
+    if not company:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Company not found")
+    from app.services.survey_service import reject_survey_response
+    return reject_survey_response(db, response_id, company.id)

@@ -174,6 +174,8 @@ class SurveyListOut(BaseModel):
 class SurveySubmit(BaseModel):
     answers: Dict[str, Any]  # {question_id: answer}
     time_taken_seconds: Optional[int] = None
+    paste_count: Optional[int] = 0
+    pasted_questions: Optional[List[int]] = []
 
 
 class SurveyResponseOut(BaseModel):
@@ -182,6 +184,10 @@ class SurveyResponseOut(BaseModel):
     user_id: int
     reward_earned: float
     completed_at: datetime
+    is_flagged: Optional[bool] = False
+    flag_reasons: Optional[List[str]] = []
+    quality_score: Optional[float] = 1.0
+    status: Optional[str] = "approved"
 
     class Config:
         from_attributes = True
@@ -256,6 +262,10 @@ class AdminStats(BaseModel):
     total_revenue: float
     pending_withdrawals: int
     platform_earnings: float
+    total_user_earnings: float = 0.0
+    total_company_spent: float = 0.0
+    earnings_per_user: Dict[str, float] = {}
+    company_payments: Dict[str, float] = {}
 
 
 class SurveyApprovalAction(BaseModel):

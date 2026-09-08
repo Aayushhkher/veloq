@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     PLATFORM_COMMISSION_PERCENT: float = 10.0
     MIN_WITHDRAWAL_AMOUNT: float = 100.0
 
+    GEMINI_API_KEY: Optional[str] = None
+
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
 

@@ -44,3 +44,5 @@ Thumbs.db
 
 # Vercel
 .vercel/
+*.tsbuildinfo
+.pdf-venv/

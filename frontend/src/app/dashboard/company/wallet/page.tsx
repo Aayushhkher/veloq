@@ -82,28 +82,43 @@ export default function CompanyWalletPage() {
         <h1 className="font-display text-2xl font-bold text-[var(--text-primary)]">Wallet & Billing</h1>
 
         {/* Balance card */}
-        <motion.div
-          className="glass rounded-2xl p-8 border border-emerald-500/20 bg-gradient-to-br from-emerald-500/[0.05] to-transparent relative overflow-hidden"
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl" />
-          <div className="relative">
-            <p className="text-sm text-[var(--text-secondary)] mb-2">Company Wallet</p>
-            <div className="font-display text-5xl font-bold text-[var(--text-primary)] mb-4">
-              {formatCurrency(company?.wallet_balance || 0)}
-            </div>
-            <div className="flex gap-6 text-sm">
-              <div>
-                <p className="text-[var(--text-muted)] text-xs">Total deposited</p>
-                <p className="text-[var(--text-secondary)] font-medium">{formatCurrency(company?.total_deposited || 0)}</p>
+        {(() => {
+          const totalSpent = company?.total_spent || 0;
+          const platformFeeDeducted = totalSpent * (10 / 110);
+          const netSurveySpend = totalSpent - platformFeeDeducted;
+          return (
+            <motion.div
+              className="glass rounded-2xl p-8 border border-emerald-500/20 bg-gradient-to-br from-emerald-500/[0.05] to-transparent relative overflow-hidden"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl" />
+              <div className="relative">
+                <p className="text-sm text-[var(--text-secondary)] mb-2">Company Wallet</p>
+                <div className="font-display text-5xl font-bold text-[var(--text-primary)] mb-4">
+                  {formatCurrency(company?.wallet_balance || 0)}
+                </div>
+                <div className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
+                  <div>
+                    <p className="text-[var(--text-muted)] text-xs">Total deposited</p>
+                    <p className="text-[var(--text-secondary)] font-medium">{formatCurrency(company?.total_deposited || 0)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[var(--text-muted)] text-xs">Total spent (inc. fee)</p>
+                    <p className="text-[var(--text-secondary)] font-medium">{formatCurrency(totalSpent)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[var(--text-muted)] text-xs">Net Survey Spend</p>
+                    <p className="text-emerald-400 font-medium">{formatCurrency(netSurveySpend)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[var(--text-muted)] text-xs">Platform Fee (10% paid)</p>
+                    <p className="text-amber-400 font-medium">{formatCurrency(platformFeeDeducted)}</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-[var(--text-muted)] text-xs">Total spent</p>
-                <p className="text-[var(--text-secondary)] font-medium">{formatCurrency(company?.total_spent || 0)}</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
+            </motion.div>
+          );
+        })()}
 
         {/* Deposit card */}
         <motion.div

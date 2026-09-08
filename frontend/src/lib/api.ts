@@ -51,6 +51,7 @@ export const userAPI = {
     api.post('/user/wallet/withdraw', { amount, upi_id }),
   getWithdrawals: () => api.get('/user/wallet/withdrawals'),
   getCompletedSurveys: () => api.get('/user/completed-surveys'),
+  getAnalytics: () => api.get('/user/analytics'),
 }
 
 // ─── Survey ───────────────────────────────────────────────────────────────────
@@ -61,11 +62,14 @@ export const surveyAPI = {
     return api.get(url)
   },
   getById: (id: number) => api.get(`/survey/${id}`),
-  submit: (id: number, answers: Record<string, any>, timeTaken?: number) =>
-    api.post(`/survey/${id}/submit`, { answers, time_taken_seconds: timeTaken }),
+  submit: (id: number, answers: Record<string, any>, timeTaken?: number, pasteCount?: number, pastedQuestions?: number[]) =>
+    api.post(`/survey/${id}/submit`, { answers, time_taken_seconds: timeTaken, paste_count: pasteCount, pasted_questions: pastedQuestions }),
   createSurvey: (data: SurveyCreateData) => api.post('/survey/company/create', data),
   getCompanySurveys: () => api.get('/survey/company/list'),
   getAnalytics: (surveyId: number) => api.get(`/survey/company/${surveyId}/analytics`),
+  exportCSV: (surveyId: number) => api.get(`/survey/company/${surveyId}/export-csv`, { responseType: 'blob' }),
+  approveResponse: (responseId: number) => api.post(`/survey/company/response/${responseId}/approve`),
+  rejectResponse: (responseId: number) => api.post(`/survey/company/response/${responseId}/reject`),
 }
 
 // ─── Company ──────────────────────────────────────────────────────────────────

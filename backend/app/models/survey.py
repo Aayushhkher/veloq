@@ -79,6 +79,11 @@ class SurveyResponse(Base):
     completed_at = Column(DateTime(timezone=True), server_default=func.now())
     time_taken_seconds = Column(Integer, nullable=True)
 
+    is_flagged = Column(Boolean, default=False, nullable=True)
+    flag_reasons = Column(JSON, default=list, nullable=True)
+    quality_score = Column(Float, default=1.0, nullable=True)
+    status = Column(String(50), default="approved", nullable=True)
+
     # Relationships
     survey = relationship("Survey", back_populates="responses")
     user = relationship("User", back_populates="survey_responses")

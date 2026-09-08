@@ -28,7 +28,20 @@ def get_admin_stats(
 
     total_revenue = db.query(func.sum(Payment.amount)).filter(Payment.status == "paid").scalar() or 0
     from app.core.config import settings
-    platform_earnings = total_revenue * (settings.PLATFORM_COMMISSION_PERCENT / 100)
+
+    total_user_earnings = db.query(func.sum(User.total_earned)).filter(User.role == UserRole.USER).scalar() or 0.0
+    total_company_spent = db.query(func.sum(Company.total_spent)).scalar() or 0.0
+    
+    # Platform earnings calculated as the commission portion of total company spent
+    platform_earnings = total_company_spent * (settings.PLATFORM_COMMISSION_PERCENT / (100 + settings.PLATFORM_COMMISSION_PERCENT))
+
+    # Get earnings per user
+    users = db.query(User).filter(User.role == UserRole.USER, User.total_earned > 0).all()
+    earnings_per_user = {u.full_name or u.email: u.total_earned for u in users}
+
+    # Get payments per company
+    companies = db.query(Company).filter(Company.total_spent > 0).all()
+    company_payments = {c.company_name: c.total_spent for c in companies}
 
     return AdminStats(
         total_users=total_users,
@@ -39,6 +52,10 @@ def get_admin_stats(
         total_revenue=total_revenue,
         pending_withdrawals=pending_withdrawals,
         platform_earnings=platform_earnings,
+        total_user_earnings=total_user_earnings,
+        total_company_spent=total_company_spent,
+        earnings_per_user=earnings_per_user,
+        company_payments=company_payments
     )
 
 

@@ -84,9 +84,9 @@ export default function CompanySurveysPage() {
                     <div className="flex flex-col items-end gap-2 flex-shrink-0">
                       <Link
                         href={`/dashboard/company/surveys/${survey.id}`}
-                        className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-emerald-400 transition-colors"
+                        className="flex items-center gap-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-black px-3.5 py-2 rounded-xl transition-all shadow-md shadow-emerald-500/10"
                       >
-                        Analytics <ArrowRight className="w-3.5 h-3.5" />
+                        Inspect Responses ({survey.current_responses}) <ArrowRight className="w-3.5 h-3.5" />
                       </Link>
                     </div>
                   </div>
